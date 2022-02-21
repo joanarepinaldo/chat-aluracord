@@ -4,19 +4,18 @@ import appConfig from '../config.json';
 import { createClient } from '@supabase/supabase-js';
 import {useRouter} from 'next/router';
 import { ButtonSendSticker } from '../src/components/ButtonSendSticker';
-import { MdDelete } from 'react-icons/md';
+import { MdDelete, MdLogout  } from 'react-icons/md';
+import MessageList from '../src/components/MessageList';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 const supabaseClient = createClient(supabaseUrl, supabaseAnonKey);
 
-function escutaMensagensEmTempoReal(adicionaMensagem) {
+function escutaMensagensEmTempoReal(AtualizaListaMsgs) {
     return supabaseClient
       .from('mensagens')
-      .on('INSERT', (respostaLive) => {
-        adicionaMensagem(respostaLive.new);
-      })
-      .subscribe();
+      .on('*', AtualizaListaMsgs) 
+      .subscribe()
   }
 
 export default function ChatPage() {
@@ -24,7 +23,7 @@ export default function ChatPage() {
     const [listaDeMensagens, setListaDeMensagens] = React.useState([]);
     const roteamento = useRouter();
     const usuarioLogado=roteamento.query.username;
-
+    console.log(roteamento)
     function AtualizaListaMsgs() {
         supabaseClient
             .from('mensagens')
@@ -39,30 +38,9 @@ export default function ChatPage() {
         
      React.useEffect(() => {
         AtualizaListaMsgs()
-
-      const subscription = escutaMensagensEmTempoReal((novaMensagem) => {
-        console.log('Nova mensagem:', novaMensagem);
-        console.log('listaDeMensagens:', listaDeMensagens);
-        // Quero reusar um valor de referencia (objeto/array) 
-        // Passar uma função pro setState
-  
-        // setListaDeMensagens([
-        //     novaMensagem,
-        //     ...listaDeMensagens
-        // ])
-        setListaDeMensagens((valorAtualDaLista) => {
-          console.log('valorAtualDaLista:', valorAtualDaLista);
-          return [
-            novaMensagem,
-            ...valorAtualDaLista,
-          ]
-        });
-      });
-  
-      return () => {
-        subscription.unsubscribe();
-      }
+        escutaMensagensEmTempoReal(AtualizaListaMsgs)
     }, []);
+
     function ApagaMensagem(id) {
         supabaseClient
             .from("mensagens")
@@ -98,8 +76,11 @@ export default function ChatPage() {
             mensagem
           ])
           .then(({ data }) => {
-            console.log('Criando mensagem: ', data);
-          });
+            setListaDeMensagens([
+                data[0],
+                ...listaDeMensagens
+            ])
+        })
     
         setMensagem('');
       }
@@ -121,7 +102,7 @@ export default function ChatPage() {
                     flex: 1,
                     boxShadow: '0 2px 10px 0 rgb(0 0 0 / 20%)',
                     borderRadius: '5px',
-                    backgroundColor: appConfig.theme.colors.neutrals[300],
+                    backgroundColor: appConfig.theme.colors.neutrals[0],
                     height: '100%',
                     maxWidth: '95%',
                     maxHeight: '95vh',
@@ -142,6 +123,7 @@ export default function ChatPage() {
                     }}
                 >
                      <MessageList
+                        supabaseClient={supabaseClient}
                         mensagens={listaDeMensagens}
                         setListaDeMensagens={setListaDeMensagens}
                         usuarioLogado={usuarioLogado}
@@ -177,6 +159,7 @@ export default function ChatPage() {
                             type="textarea"
                             styleSheet={{
                                 width: '100%',
+                                fontSize: '15px',
                                 border: '0',
                                 resize: 'none',
                                 borderRadius: '5px',
@@ -204,35 +187,53 @@ function Header() {
     return (
         <>
             <Box styleSheet={{ width: '100%', marginBottom: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }} >
-                <Text variant='heading5'>
+                <Text variant='heading3'>
                     Chat
+                    
                 </Text>
                 <Button
                     variant='tertiary'
                     colorVariant='neutral'
-                    label='Logout'
+                    label={< MdLogout size={18}  />}
                     href="/"
+                    styleSheet={{
+                        borderRadius: '5px',
+                        minWidth: '42px',
+                        minHeight: '42px',
+                        backgroundColor: appConfig.theme.colors.neutrals[300],
+                        marginRight: '10px',
+                        color: appConfig.theme.colors.neutrals[200],
+                        hover: {
+                            backgroundColor: appConfig.theme.colors.neutrals[200],
+                            color: 'black'
+                        }
+                    }}
+                    buttonColors={{
+                        mainColorLight: appConfig.theme.colors.neutrals[200],
+                        
+                    }}
                 />
             </Box>
         </>
     )
 }
 
-function MessageList(props) {
+function MessageList2(props) {
     console.log(props);
     return (
         <Box
             tag="ul"
             styleSheet={{
                 overflow: 'scroll',
+                wordBreak: 'break-word',
                 display: 'flex',
                 flexDirection: 'column-reverse',
                 flex: 1,
-                color: appConfig.theme.colors.neutrals["000"],
-                marginBottom: '16px',
+                color: appConfig.theme.colors.neutrals[0],
+                marginBottom: '1px',
             }}
         >
-            {!props.loading && props.mensagens.map((mensagem) => {
+            {props.mensagens.map((mensagem) => {
                 return (
                     <Text
                         key={mensagem.id}
@@ -245,7 +246,7 @@ function MessageList(props) {
                             padding: '6px',
                             marginBottom: '12px',
                             hover: {
-                                backgroundColor: appConfig.theme.colors.neutrals[300],
+                                backgroundColor: appConfig.theme.colors.neutrals[400],
                             }
                         }}
                     >
@@ -272,12 +273,12 @@ function MessageList(props) {
                                 onClick={(evento) => {
 
                                     evento.preventDefault();
-                                    console.log(props.id)
+                                    props.ApagaMensagem(props.id)                                    
                                 }}
                             />}
                             <Text
                                 styleSheet={{
-                                    fontSize: '10px',
+                                    fontSize: '18px',
                                     marginLeft: '8px',
                                     color: appConfig.theme.colors.neutrals[200],
                                 }}

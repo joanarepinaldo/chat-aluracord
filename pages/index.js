@@ -106,7 +106,7 @@ export default function PaginaInicial() {
               onSubmit={function(infoEvent){
                 infoEvent.preventDefault();
                 // window.location.href='/chat';
-                roteamento.push(`/chat?usermane=${username}`);
+                roteamento.push(`/chat?username=${username}`);
               }}
               styleSheet={{
                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
@@ -181,7 +181,7 @@ export default function PaginaInicial() {
                 variant="body4"
                 styleSheet={{
                   color: appConfig.theme.colors.neutrals[300],
-                  backgroundColor: appConfig.theme.colors.neutrals[300],
+                  backgroundColor: appConfig.theme.colors.neutrals[200],
                   padding: '3px 10px',
                   borderRadius: '1000px'
                 }}

@@ -24,7 +24,7 @@ export default function UserCard(props) {
             <Box 
             styleSheet={{
                 // backgroundColor: tema.menuP,
-                height: '250px',
+                height: '350px',
                 bottom: '30px',
                 width: {
                     xs: '200px',
